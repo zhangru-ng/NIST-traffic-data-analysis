@@ -22,7 +22,7 @@ public class JoinReducer extends Reducer<Text, Text, Text, Text> {
 		vals.add(parts[1]);
 	    }
 	}
-	if (inventory != null && vals.size() >= 2) {
+	if (inventory != null && !vals.isEmpty()) {
 	    for (String vs : vals) {
 		outputVal.set(vs + "," + inventory);
 		context.write(key, outputVal);
