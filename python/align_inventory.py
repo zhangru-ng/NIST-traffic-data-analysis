@@ -4,7 +4,9 @@ import re
 
 with open('new_detector_lane_inventory.csv', 'w') as outfile, open('detector_lane_inventory.csv', 'r') as inventory:
     reader = csv.reader(inventory)
-    writer = csv.writer(outfile, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+    # writer = csv.writer(outfile, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+    # csv writer + QUOTE_NONNUMERIC doesn't work well since it treats every field read 
+    # from reader as str, thus all fields are quoted in the output
     for row in reader:
         new_row = []
         for item in [re.sub('\n *', '', x) for x in row]:
