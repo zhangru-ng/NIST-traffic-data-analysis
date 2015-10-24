@@ -5,15 +5,12 @@
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
-clean_0611 = pd.read_csv('/home/datascience/Desktop/cleaning-0611.csv',
+# clean_test = pd.read_csv('/home/datascience/Desktop/cleaning_test_06_09.csv',
+clean_test = pd.read_csv('/home/datascience/Desktop/cleaning-0611.csv',
 names=['lane_id','measurement_start','speed','flow','occupancy','quality'])
 
-# filter positive flow and speed
-positive_flow_speed = (clean_0611['flow'] > 0) & (clean_0611['speed'] > 0)
-
 # According to traffic flow theory
-# 		v = c * q / o
+#         v = c * q / o            (1)
 # v -- space mean speed(in mph)
 # q -- flow
 # o -- occupancy
@@ -24,34 +21,58 @@ positive_flow_speed = (clean_0611['flow'] > 0) & (clean_0611['speed'] > 0)
 # compact sedans length is about  14.75 feet
 # truck length is about is about 50 feet
 # The normal detectable length of loop detector is about 5 feet
-# for sedans c is about 37, and for truck, c is about 104.17
+# so for sedans c is about 37, and for truck, c is about 104.17
+
+# first clean negative speed and flow
+negative_speed_flow = ((clean_test['speed'] < 0) | 
+                       (clean_test['flow'] < 0))
+clean_test = clean_test[~negative_speed_flow]
+
+# if speed is greater than 0, flow should be greater than 0
+abnormal_zero_flow = ((clean_test['flow'] == 0) & 
+                      (clean_test['speed'] > 0))
+clean_test = clean_test[~abnormal_zero_flow]
+
+# if both speed and flow are zero, occupancy shuold be 0(not car at all) or very high(jam)
+jam_occupancy_threshold = 90
+abnormal_zero_speed_flow = ((clean_test['speed'] == 0) & 
+                            (clean_test['flow'] == 0) & 
+                            (clean_test['occupancy'] != 0) & 
+                            (clean_test['occupancy'] < jam_occupancy_threshold))
+clean_test = clean_test[~abnormal_zero_speed_flow]
+
+# find abnormal speed, if there is no jam, when the speed is slow, flow should be small
+# assume length of loop detector is 5 feet, factor is 17.6
+abnormal_speed = ((clean_test['speed'] < clean_test['flow'] / 17.6) & 
+                  (clean_test['occupancy'] < jam_occupancy_threshold))
+clean_test = clean_test[~abnormal_speed]
+
+# find abnormal flow, if flow is large, speed should be high
+# assume length of car is 4.5m, factor is 0.434
+abnormal_flow = (clean_test['flow'] * 0.434 > clean_test['speed'])
+clean_test = clean_test[~abnormal_flow]
+
+# filter positive flow ,speed, occupancy 
+positive_measure = (clean_test['flow'] > 0) & (clean_test['speed'] > 0) & (clean_test['occupancy'] > 0)
 
 # add new series 'coefficient' to store c, the constant mentioned above
-clean_0611['coefficient'] = 0
+clean_test['coefficient'] = 0
+clean_test.loc[positive_measure, ['coefficient']] = clean_test['speed'] * clean_test['occupancy'] / clean_test['flow']
 
-clean_0611.loc[positive_flow_speed,['coefficient']] = clean_0611['speed'] * clean_0611['occupancy'] / clean_0611['flow']
+coefficient_threshold = 500
+abnormal_coefficient = (((clean_test['coefficient'] > 0) & (clean_test['coefficient'] < 1)) 
+                        | (clean_test['coefficient'] > coefficient_threshold))
 
-# if the coefiicient is equal to 0, we can not get useful information
-positive_coefficient = clean_0611[clean_0611['coefficient'] > 0]
-# positive_coefficient.describe()
-#        coefficient  
-# count  1140416.000000  
-# mean   31.590026  
-# std    172.957404  
-# min    0.015686  
-# 25%    21.000000  
-# 50%    24.400000  
-# 75%    26.142857  
-# max    12672.000000 
+clean_test = clean_test[~abnormal_coefficient]
 
-abnormal_coefficient = positive_coefficient[positive_coefficient['coefficient'] > 1000]
-# abnormal_coefficient.describe()
-#         coefficient  
-# count   2710.000000  
-# mean    2597.746409  
-# std     2423.112885  
-# min      500.294118  
-# 25%      800.000000  
-# 50%     1548.000000  
-# 75%     3584.000000  
-# max     12672.00000
+# clean_test[['speed','flow','occupancy', 'coefficient']].describe()
+#                 speed            flow       occupancy     coefficient
+# count  1324910.000000  1324910.000000  1324910.000000  1324910.000000
+# mean        51.563472       13.400633        7.455853       21.773113
+# std         24.561942       10.554616       11.576778       17.973971
+# min          0.000000        0.000000        0.000000        0.000000
+# 25%         44.000000        4.000000        2.000000       18.285714
+# 50%         61.000000       12.000000        5.000000       23.333333
+# 75%         67.000000       21.000000        9.000000       25.384615
+# max        147.000000      107.000000      221.000000      500.000000
+
