@@ -13,6 +13,8 @@ public class CleanTestMapper extends Mapper<LongWritable, Text, Text, Text> {
     @Override
     public void map(LongWritable key, Text value, Context context)
             throws IOException, InterruptedException {
+	// schema
+	// lane_id,measurement_start,speed,flow,occupancy,quality
         String[] input = value.toString().split(",", 2);
         if (!input[0].contains("lane_id")) {
             outputKey.set(input[0]);

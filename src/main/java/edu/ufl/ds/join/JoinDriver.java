@@ -1,11 +1,15 @@
 package edu.ufl.ds.join;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
@@ -15,27 +19,15 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 public class JoinDriver {
-    /*
-     * args[0]: Inventory file path
-     * args[1]: Cleaning test file path
-     * args[2]: Output bucket(directory) path
-     */
-    public static void main(String[] args) throws Exception {
+    private static String outBucket = "";
+    private static String tmp = "";
+    private static String result = "";
+    private static String resultPrefix = "joined_";
+
+    public static void joinDriver(Path inputPath1, Path inputPath2) throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
 	Configuration conf = new Configuration();
-	String[] files = new GenericOptionsParser(conf, args).getRemainingArgs();
-
-	Path inputPath1 = new Path(files[0]);
-	Path inputPath2 = new Path(files[1]);
-	Path tempPath = new Path(files[2] + "tmp/");
-	Path resultPath = new Path(files[2] + "join.out");
-
-	FileSystem fs = FileSystem.get(new URI(files[2]), conf);
-	if (fs.exists(tempPath)) {
-	    fs.delete(tempPath, true);
-	}
 
 	conf.set("mapreduce.output.textoutputformat.separator", ",");
-
 	Job job = Job.getInstance(conf);
 	job.setJarByClass(JoinDriver.class);
 
@@ -45,11 +37,43 @@ public class JoinDriver {
 	job.setOutputValueClass(Text.class);
 	job.setReducerClass(JoinReducer.class);
 
+	String cleanTestName = inputPath2.getName();
+	Path outputPath = new Path(tmp + cleanTestName);
+	Path resultPath = new Path(result + resultPrefix + cleanTestName);
+
 	job.setOutputFormatClass(TextOutputFormat.class);
-	FileOutputFormat.setOutputPath(job, tempPath);
+	FileOutputFormat.setOutputPath(job, outputPath);
 
 	job.waitForCompletion(true);
 
-	FileUtil.copyMerge(fs, tempPath, fs, resultPath, false, conf, "");
+	FileSystem fs = FileSystem.get(new URI(outBucket), conf);
+	FileUtil.copyMerge(fs, outputPath, fs, resultPath, false, conf, "");
+    }
+    /*
+     * args[0]: Inventory file path
+     * args[1]: Cleaning test directory path
+     * args[2]: Output bucket(directory) path
+     */
+    public static void main(String[] args) throws Exception {
+	Configuration conf = new Configuration();
+	String[] paths = new GenericOptionsParser(conf, args).getRemainingArgs();
+
+	Path inputPath1 = new Path(paths[0]);
+	Path inputPath2 = new Path(paths[1]);
+	outBucket = paths[2];
+	tmp = paths[2] + "tmp/";
+	result = paths[2] + "result/";
+
+	FileSystem fs = FileSystem.get(new URI(paths[2]), conf);
+	Path tempPath = new Path(tmp);
+	if (fs.exists(tempPath)) {
+	    fs.delete(tempPath, true);
+	}
+	// run on all cleaning_test file, run each file separately to preserve file name in result
+	RemoteIterator<LocatedFileStatus> fileIterator = fs.listFiles(inputPath2, false);
+	while (fileIterator.hasNext()) {
+	    LocatedFileStatus stat = fileIterator.next();
+	    JoinDriver.joinDriver(inputPath1, stat.getPath());
+	}
     }
 }
