@@ -29,27 +29,23 @@ negative_speed_flow = ((clean_test['speed'] < 0) |
 clean_test = clean_test[~negative_speed_flow]
 
 # if speed is greater than 0, flow should be greater than 0
+# but it doesn't mean if flow is positive, speed must be positive since 
+# speed is an integer, it may be less than 1 mph and truncated to 0
 abnormal_zero_flow = ((clean_test['flow'] == 0) & 
                       (clean_test['speed'] > 0))
 clean_test = clean_test[~abnormal_zero_flow]
 
 # if both speed and flow are zero, occupancy shuold be 0(not car at all) or very high(jam)
-jam_occupancy_threshold = 90
+jam_occupancy_threshold = 80
 abnormal_zero_speed_flow = ((clean_test['speed'] == 0) & 
                             (clean_test['flow'] == 0) & 
                             (clean_test['occupancy'] != 0) & 
                             (clean_test['occupancy'] < jam_occupancy_threshold))
 clean_test = clean_test[~abnormal_zero_speed_flow]
 
-# find abnormal speed, if there is no jam, when the speed is slow, flow should be small
-# assume length of loop detector is 5 feet, factor is 17.6
-abnormal_speed = ((clean_test['speed'] < clean_test['flow'] / 17.6) & 
-                  (clean_test['occupancy'] < jam_occupancy_threshold))
-clean_test = clean_test[~abnormal_speed]
-
 # find abnormal flow, if flow is large, speed should be high
-# assume length of car is 4.5m, factor is 0.434
-abnormal_flow = (clean_test['flow'] * 0.434 > clean_test['speed'])
+# assume length of car is greater than 4.5m and length of loop detector is 1.5m, factor is 0.578
+abnormal_flow = (clean_test['flow'] * 0.578 > clean_test['speed'])
 clean_test = clean_test[~abnormal_flow]
 
 # filter positive flow ,speed, occupancy 
