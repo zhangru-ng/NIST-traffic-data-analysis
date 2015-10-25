@@ -11,9 +11,9 @@ public class ConsistentCleaningReducer extends Reducer<Text, Text, Text, Text> {
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context)
 	    throws IOException, InterruptedException {
+	// mean and std cleaning can be done in each group
 	for (Text v : values) {
-
+	    context.write(key, v);
 	}
-
     }
 }

@@ -12,6 +12,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -30,6 +32,7 @@ public class ConsistentCleaningDriver {
 	Job job = Job.getInstance(conf);
 	job.setJarByClass(ConsistentCleaningDriver.class);
 
+	job.setMapperClass(ConsistentCleaningMapper.class);
 	job.setOutputKeyClass(Text.class);
 	job.setOutputValueClass(Text.class);
 	job.setReducerClass(ConsistentCleaningReducer.class);
@@ -42,6 +45,9 @@ public class ConsistentCleaningDriver {
 	    fs.delete(tmpPath, true);
 	}
 	Path resultPath = new Path(result + resultPrefix + cleanTestName);
+
+	FileInputFormat.addInputPath(job, inputPath);
+	job.setInputFormatClass(TextInputFormat.class);
 
 	job.setOutputFormatClass(TextOutputFormat.class);
 	FileOutputFormat.setOutputPath(job, tmpPath);
