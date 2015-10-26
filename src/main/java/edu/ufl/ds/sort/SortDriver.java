@@ -10,9 +10,7 @@ import java.util.Date;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
@@ -21,13 +19,11 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.util.GenericOptionsParser;
+
+import edu.ufl.ds.Cleaning;
 
 public class SortDriver {
-    private static String outBucket = "";
-    private static String tmp = "";
-    private static String result = "";
-    private static String resultPrefix = "";
+    private static String tmp = "sorttmp/";
 
     public static class LaneIdAndTimeComparator extends WritableComparator {
 
@@ -63,7 +59,7 @@ public class SortDriver {
         }
     }
 
-    public static void sortDriver(Path inputPath)
+    public static void sort(Path inputPath, String filename)
             throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
         Configuration conf = new Configuration();
 
@@ -79,13 +75,12 @@ public class SortDriver {
         job.setNumReduceTasks(1);
 
         String cleanTestName = inputPath.getName();
-        Path tmpPath = new Path(tmp + cleanTestName);
+        Path tmpPath = new Path(Cleaning.outBucket + tmp + cleanTestName);
 
-        FileSystem fs = FileSystem.get(new URI(outBucket), conf);
+        FileSystem fs = FileSystem.get(new URI(Cleaning.outBucket), conf);
         if (fs.exists(tmpPath)) {
             fs.delete(tmpPath, true);
         }
-        Path resultPath = new Path(result + resultPrefix + cleanTestName);
 
         FileInputFormat.addInputPath(job, inputPath);
         job.setInputFormatClass(TextInputFormat.class);
@@ -94,27 +89,9 @@ public class SortDriver {
         FileOutputFormat.setOutputPath(job, tmpPath);
 
         job.waitForCompletion(true);
-        FileUtil.copyMerge(fs, tmpPath, fs, resultPath, false, conf, "");
+        String outputName = "cleaning_subm_" + filename.split("_", 3)[2].split(".")[0] + "_nist7.txt";
+        Path outPath = new Path(Cleaning.outBucket + "result/" + outputName);
+        FileUtil.copyMerge(fs, tmpPath, fs, outPath, false, conf, "");
     }
-    /*
-     * args[0]: Cleaning test directory path
-     * args[1]: Output bucket(directory) path
-     */
-    public static void main(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        String[] paths = new GenericOptionsParser(conf, args).getRemainingArgs();
 
-        Path inputPath = new Path(paths[0]);
-        outBucket = paths[1];
-        tmp = outBucket + "tmp/";
-        result = outBucket + "result/";
-
-        FileSystem fs = FileSystem.get(new URI(paths[1]), conf);
-        // run on all cleaning_test file, run each file separately to preserve file name in result
-        RemoteIterator<LocatedFileStatus> fileIterator = fs.listFiles(inputPath, false);
-        while (fileIterator.hasNext()) {
-            LocatedFileStatus stat = fileIterator.next();
-            SortDriver.sortDriver(stat.getPath());
-        }
-    }
 }

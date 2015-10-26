@@ -8,7 +8,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class NearbyMapper extends Mapper<LongWritable, Text, Text, Text> {
+public class NearbyCleaningMapper extends Mapper<LongWritable, Text, Text, Text> {
 	static private HashMap<String, String[]> nearbyZones = null;
 
 	@Override

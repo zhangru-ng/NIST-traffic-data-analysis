@@ -1,4 +1,4 @@
-package edu.ufl.ds.negative;
+package edu.ufl.ds.nearby;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,26 +16,28 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import edu.ufl.ds.Cleaning;
 
-public class NegativeCleaningDriver {
+public class NearbyCleaningDriver {
+	static StringBuffer nearbyZones = new StringBuffer();
 
-	public static void negativeCleaning(Path inputPath, Path outputPath)
+	public static void nearbyCleaning(Path inputPath, Path outputPath)
 			throws ClassNotFoundException, IOException, InterruptedException,
 			URISyntaxException {
-		Configuration conf = new Configuration();
 
+		Configuration conf = new Configuration();
+		conf.set("nearbyzones", nearbyZones.toString().substring(1));
 		conf.set("mapreduce.output.textoutputformat.separator", ",");
 		Job job = Job.getInstance(conf);
-		job.setJarByClass(NegativeCleaningDriver.class);
+		job.setJarByClass(NearbyCleaningDriver.class);
 
-		job.setMapperClass(NegativeCleaningMapper.class);
+		job.setMapperClass(NearbyCleaningMapper.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
-		job.setReducerClass(NegativeCleaningReducer.class);
+		job.setReducerClass(NearbyCleaningReducer.class);
 
 		FileSystem fs = FileSystem.get(new URI(Cleaning.outBucket), conf);
-		if (fs.exists(outputPath)) {
-			fs.delete(outputPath, true);
-		}
+	        if (fs.exists(outputPath)) {
+	            fs.delete(outputPath, true);
+	        }
 
 		FileInputFormat.addInputPath(job, inputPath);
 		job.setInputFormatClass(TextInputFormat.class);
@@ -45,5 +47,4 @@ public class NegativeCleaningDriver {
 
 		job.waitForCompletion(true);
 	}
-
 }

@@ -24,7 +24,7 @@ public class JoinDriver {
     private static String result = "";
     private static String resultPrefix = "joined_";
 
-    public static void joinDriver(Path inputPath1, Path inputPath2) throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
+    public static void join(Path inputPath1, Path inputPath2) throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
 	Configuration conf = new Configuration();
 
 	conf.set("mapreduce.output.textoutputformat.separator", ",");
@@ -73,7 +73,7 @@ public class JoinDriver {
 	RemoteIterator<LocatedFileStatus> fileIterator = fs.listFiles(inputPath2, false);
 	while (fileIterator.hasNext()) {
 	    LocatedFileStatus stat = fileIterator.next();
-	    JoinDriver.joinDriver(inputPath1, stat.getPath());
+	    JoinDriver.join(inputPath1, stat.getPath());
 	}
     }
 }

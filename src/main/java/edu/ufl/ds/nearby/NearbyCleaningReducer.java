@@ -6,9 +6,8 @@ import java.util.ArrayList;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class NearbyReducer extends Reducer<Text, Text, Text, Text> {
+public class NearbyCleaningReducer extends Reducer<Text, Text, Text, Text> {
 	private Text outputKey = new Text();
-	private Text outputVal = new Text();
 
 	@Override
 	public void reduce(Text key, Iterable<Text> values, Context context)
