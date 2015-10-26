@@ -14,7 +14,6 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import edu.ufl.ds.consistence.ConsistentCleaningDriver;
 import edu.ufl.ds.nearby.NearbyCleaningDriver;
 import edu.ufl.ds.negative.NegativeCleaningDriver;
-import edu.ufl.ds.sort.SortDriver;
 
 public class Cleaning {
     static public String outBucket = "";
@@ -49,8 +48,7 @@ public class Cleaning {
             LocatedFileStatus stat = fileIterator.next();
             NegativeCleaningDriver.negativeCleaning(stat.getPath(), negativeOut);
             ConsistentCleaningDriver.consistentCleaning(negativeOut, consistentOut);
-            NearbyCleaningDriver.nearbyCleaning(consistentOut, nearbyOut);
-            SortDriver.sort(nearbyOut, stat.getPath().getName());
+            NearbyCleaningDriver.nearbyCleaning(consistentOut, stat.getPath().getName());
         }
     }
 }

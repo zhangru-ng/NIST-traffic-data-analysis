@@ -18,7 +18,7 @@ import edu.ufl.ds.Cleaning;
 
 public class NearbyCleaningDriver {
 
-	public static void nearbyCleaning(Path inputPath, Path outputPath)
+	public static void nearbyCleaning(Path inputPath, String filename)
 			throws ClassNotFoundException, IOException, InterruptedException,
 			URISyntaxException {
 	    Configuration conf = new Configuration();
@@ -34,6 +34,8 @@ public class NearbyCleaningDriver {
 		job.setOutputValueClass(Text.class);
 		job.setReducerClass(NearbyCleaningReducer.class);
 
+		String outputName = filename.substring(7).replaceAll(".csv", "");
+		Path outputPath = new Path(Cleaning.outBucket + outputName);
         if (fs.exists(outputPath)) {
             fs.delete(outputPath, true);
         }
