@@ -1,9 +1,7 @@
 package edu.ufl.ds.consistence;
 
 import java.io.IOException;
-import java.util.Arrays;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -26,7 +24,13 @@ public class ConsistentCleaningMapper extends Mapper<LongWritable, Text, Text, T
          * [4] occupancy,
          * [5] quality 0 - valid, 1 - invalid, 2 - incomplete, 3 - unknown
          */
-        String[] parts = value.toString().split(",");
+        String[] parts = value.toString().split(",", 6);
+        // if it is considered as wrong in previous job, no need to check it again
+        String[] tab_parts = value.toString().split("\t");
+        if (tab_parts[1].equals("0")) {
+            return;
+        }
+
         int speed = Integer.parseInt(parts[2]);
         int flow = Integer.parseInt(parts[3]);
         int occupancy = Integer.parseInt(parts[4]);
@@ -35,7 +39,7 @@ public class ConsistentCleaningMapper extends Mapper<LongWritable, Text, Text, T
         outputKey.set(parts[0]);
         String reason = "";
         // mark record as invalid before checking
-        String quality = "1";
+        String correctness = "0";
         if (speed < 0 || flow < 0) {
             reason = "Negative speed or flow";
         }
@@ -43,6 +47,10 @@ public class ConsistentCleaningMapper extends Mapper<LongWritable, Text, Text, T
         // Since no car passes, we can't get average speed
         else if (flow == 0 && speed > 0) {
             reason = "Flow is zero but average speed is greater than 0";
+        }
+        // when speed is 0 and flow is greater than 0, there should be a jam
+        else if (speed == 0 && flow > 0 && occupancy < JAM_THRESHOLD) {
+            reason = "Inconsistent speed and flow";
         }
         // when both flow and speed are 0, there may be no car at all or a jam
         // note that speed is an integer and in mph, speed = 0 may means speed
@@ -72,17 +80,19 @@ public class ConsistentCleaningMapper extends Mapper<LongWritable, Text, Text, T
         // so for sedans c is about 37, and for truck, c is about 104.17
         else {
             float coefficient = flow > 0 ? speed * occupancy / flow : 0.0f;
-            if ((coefficient > 0 && coefficient < 1) || coefficient > FACTOR_3D_THRESHOLD) {
+            if ((coefficient > 0 && coefficient < 1) ||
+        	(coefficient > FACTOR_3D_THRESHOLD && occupancy < JAM_THRESHOLD) ||
+        	(coefficient > 4* FACTOR_3D_THRESHOLD && occupancy >= JAM_THRESHOLD)) {
                 reason = "Inconsistent speed, flow and occupancy";
             }
             // records reach this branch are considered as consistent
             else {
-                quality = "0";
+        	correctness = "1";
             }
 
         }
-        String join = StringUtils.join(Arrays.copyOfRange(parts, 1, 5), ",");
-        outputVal.set(join + ',' + quality + ',' + reason);
+        String suffix = correctness.equals("1") ? correctness : correctness + "\t\"" + reason + "\"";
+        outputVal.set(tab_parts[0] + '\t' + suffix);
         context.write(outputKey, outputVal);
     }
 }

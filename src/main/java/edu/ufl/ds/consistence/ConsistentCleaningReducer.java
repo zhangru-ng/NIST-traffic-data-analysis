@@ -13,7 +13,7 @@ public class ConsistentCleaningReducer extends Reducer<Text, Text, Text, Text> {
             throws IOException, InterruptedException {
         // mean and std cleaning can be done in each group
         for (Text v : values) {
-            context.write(key, v);
+            context.write(v, null);
         }
     }
 }
