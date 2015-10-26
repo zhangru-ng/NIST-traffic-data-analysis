@@ -2,7 +2,6 @@ package edu.ufl.ds.consistence;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.LongWritable;
@@ -18,15 +17,15 @@ public class ConsistentCleaningMapper extends Mapper<LongWritable, Text, Text, T
     @Override
     public void map(LongWritable key, Text value, Context context)
             throws IOException, InterruptedException {
-	/*
-	 * schema
-	 * [0] lane_id,
-	 * [1] measurement_start,
-	 * [2] speed,
-	 * [3] flow,
-	 * [4] occupancy,
-	 * [5] quality 0 - valid, 1 - invalid, 2 - incomplete, 3 - unknown
-	 */
+        /*
+         * schema
+         * [0] lane_id,
+         * [1] measurement_start,
+         * [2] speed,
+         * [3] flow,
+         * [4] occupancy,
+         * [5] quality 0 - valid, 1 - invalid, 2 - incomplete, 3 - unknown
+         */
         String[] parts = value.toString().split(",");
         int speed = Integer.parseInt(parts[2]);
         int flow = Integer.parseInt(parts[3]);
@@ -56,7 +55,7 @@ public class ConsistentCleaningMapper extends Mapper<LongWritable, Text, Text, T
         // and detectable length of loop detector), we can calculate the theoretical maximum
         // number of cars that can pass through a detector with a given speed
         // max(flow) = Interval(s) * 0.447 * speed(mph) / min(effective vehicle length(m))
-        else if(speed * FACTOR_2D > flow) {
+        else if(speed * FACTOR_2D < flow) {
             reason = "Inconsistent speed and flow";
         }
         // 3D relationship between speed, flow, and occupancy
@@ -74,21 +73,16 @@ public class ConsistentCleaningMapper extends Mapper<LongWritable, Text, Text, T
         else {
             float coefficient = flow > 0 ? speed * occupancy / flow : 0.0f;
             if ((coefficient > 0 && coefficient < 1) || coefficient > FACTOR_3D_THRESHOLD) {
-        	reason = "Inconsistent speed, flow and occupancy";
+                reason = "Inconsistent speed, flow and occupancy";
             }
             // records reach this branch are considered as consistent
             else {
-        	quality = "0";
+                quality = "0";
             }
 
         }
-
-        List<String> valList = Arrays.asList(parts).subList(1, 5);
-        valList.add(quality);
-        valList.add(reason);
-        String join = StringUtils.join(valList, ",");
-
-        outputVal.set(join);
+        String join = StringUtils.join(Arrays.copyOfRange(parts, 1, 5), ",");
+        outputVal.set(join + ',' + quality + ',' + reason);
         context.write(outputKey, outputVal);
     }
 }
