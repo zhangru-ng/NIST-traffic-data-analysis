@@ -42,17 +42,13 @@ public class ConsistentCleaningMapper extends
 		String reason = "";
 		// mark record as invalid before checking
 		String correctness = "0";
-		if (speed < 0 || flow < 0) {
-			reason = "Negative speed or flow";
+		if (speed < 0) {
+			reason = "speed is negative ";
 		}
 		// flow = 0 means number of cars pass through in this interval is 0
 		// Since no car passes, we can't get average speed
 		else if (flow == 0 && speed > 0) {
-			reason = "Flow is zero but average speed is greater than 0";
-		}
-		// when speed is 0 and flow is greater than 0, there should be a jam
-		else if (speed == 0 && flow > 0 && occupancy < JAM_THRESHOLD) {
-			reason = "Inconsistent speed and flow";
+			reason = "Inconsistent speed and flow(flow = 0, speed > 0)";
 		}
 		// when both flow and speed are 0, there may be no car at all or a jam
 		// note that speed is an integer and in mph, speed = 0 may means speed
@@ -70,7 +66,7 @@ public class ConsistentCleaningMapper extends
 		// max(flow) = Interval(s) * 0.447 * speed(mph) / min(effective vehicle
 		// length(m))
 		else if (speed * FACTOR_2D < flow) {
-			reason = "Inconsistent speed and flow";
+			reason = "Inconsistent speed and flow(violate 2D model)";
 		}
 		// 3D relationship between speed, flow, and occupancy
 		// According to traffic flow theory
@@ -89,7 +85,7 @@ public class ConsistentCleaningMapper extends
 			if ((coefficient > 0 && coefficient < 1)
 					|| (coefficient > FACTOR_3D_THRESHOLD && occupancy < JAM_THRESHOLD)
 					|| (coefficient > 4 * FACTOR_3D_THRESHOLD && occupancy >= JAM_THRESHOLD)) {
-				reason = "Inconsistent speed, flow and occupancy";
+				reason = "Inconsistent speed, flow and occupancy(violate 2D model)";
 			}
 			// records reach this branch are considered as consistent
 			else {

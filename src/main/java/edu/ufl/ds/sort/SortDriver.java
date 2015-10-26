@@ -88,7 +88,7 @@ public class SortDriver {
         FileOutputFormat.setOutputPath(job, tmpPath);
 
         job.waitForCompletion(true);
-        String outputName = filename.replaceAll("test", "subm").replaceAll(".csv", "_nist7.txt");
+        String outputName = filename.substring(7).replaceAll("test", "subm").replaceAll(".csv", "_nist7.txt");
         Path outPath = new Path(Cleaning.outBucket + "result/" + outputName);
         FileUtil.copyMerge(fs, tmpPath, fs, outPath, false, conf, "");
     }
