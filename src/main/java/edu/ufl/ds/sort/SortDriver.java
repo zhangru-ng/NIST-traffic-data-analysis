@@ -74,8 +74,7 @@ public class SortDriver {
         job.setReducerClass(SortReducer.class);
         job.setNumReduceTasks(1);
 
-        String cleanTestName = inputPath.getName();
-        Path tmpPath = new Path(Cleaning.outBucket + tmp + cleanTestName);
+        Path tmpPath = new Path(Cleaning.outBucket + tmp + filename);
 
         FileSystem fs = FileSystem.get(new URI(Cleaning.outBucket), conf);
         if (fs.exists(tmpPath)) {
@@ -89,7 +88,7 @@ public class SortDriver {
         FileOutputFormat.setOutputPath(job, tmpPath);
 
         job.waitForCompletion(true);
-        String outputName = "cleaning_subm_" + filename.split("_", 3)[2].split(".")[0] + "_nist7.txt";
+        String outputName = filename.replaceAll("test", "subm").replaceAll(".csv", "_nist7.txt");
         Path outPath = new Path(Cleaning.outBucket + "result/" + outputName);
         FileUtil.copyMerge(fs, tmpPath, fs, outPath, false, conf, "");
     }

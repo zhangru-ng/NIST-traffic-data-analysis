@@ -17,14 +17,14 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import edu.ufl.ds.Cleaning;
 
 public class NearbyCleaningDriver {
-	static StringBuffer nearbyZones = new StringBuffer();
 
 	public static void nearbyCleaning(Path inputPath, Path outputPath)
 			throws ClassNotFoundException, IOException, InterruptedException,
 			URISyntaxException {
+	    Configuration conf = new Configuration();
+	    FileSystem fs = FileSystem.get(new URI(Cleaning.outBucket), conf);
 
-		Configuration conf = new Configuration();
-		conf.set("nearbyzones", nearbyZones.toString().substring(1));
+		conf.set("nearbyzones", Cleaning.nearbyZones);
 		conf.set("mapreduce.output.textoutputformat.separator", ",");
 		Job job = Job.getInstance(conf);
 		job.setJarByClass(NearbyCleaningDriver.class);
@@ -34,10 +34,9 @@ public class NearbyCleaningDriver {
 		job.setOutputValueClass(Text.class);
 		job.setReducerClass(NearbyCleaningReducer.class);
 
-		FileSystem fs = FileSystem.get(new URI(Cleaning.outBucket), conf);
-	        if (fs.exists(outputPath)) {
-	            fs.delete(outputPath, true);
-	        }
+        if (fs.exists(outputPath)) {
+            fs.delete(outputPath, true);
+        }
 
 		FileInputFormat.addInputPath(job, inputPath);
 		job.setInputFormatClass(TextInputFormat.class);

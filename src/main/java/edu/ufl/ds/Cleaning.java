@@ -1,5 +1,7 @@
 package edu.ufl.ds;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URI;
 
 import org.apache.hadoop.conf.Configuration;
@@ -16,6 +18,7 @@ import edu.ufl.ds.sort.SortDriver;
 
 public class Cleaning {
     static public String outBucket = "";
+    static public String nearbyZones = "";
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
@@ -25,6 +28,18 @@ public class Cleaning {
         outBucket = paths[1];
 
         FileSystem fs = FileSystem.get(new URI(paths[1]), conf);
+        StringBuffer nearbyBuffer = new StringBuffer();
+
+        Path pt = new Path(outBucket + "nearby.csv");
+        BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(pt)));
+        String line;
+        line = br.readLine();
+        while (line != null) {
+            nearbyBuffer.append("#" + line);
+            line = br.readLine();
+        }
+        nearbyZones = nearbyBuffer.toString().substring(1);
+
         // run on all cleaning_test file, run each file separately to preserve file name in result
         RemoteIterator<LocatedFileStatus> fileIterator = fs.listFiles(inputPath, false);
         Path negativeOut = new Path(outBucket + "negative/");
