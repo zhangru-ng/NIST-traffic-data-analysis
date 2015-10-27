@@ -19,7 +19,6 @@ import edu.ufl.ds.sort.SortDriver;
 public class Cleaning {
     static public String outBucket = "";
     static public String nearbyZones = "";
-    static public String sortTmp = "";
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
@@ -46,14 +45,16 @@ public class Cleaning {
         RemoteIterator<LocatedFileStatus> fileIterator = fs.listFiles(inputPath, false);
         Path negativeOut = new Path(outBucket + year + "negative/");
         Path consistentOut = new Path(outBucket + year + "consistent/");
-        sortTmp = outBucket + year + "sort/";
+        String sortTmp = outBucket + year + "sort/";
+        String partTmp = outBucket + year + "partition/";
+
         while (fileIterator.hasNext()) {
             LocatedFileStatus stat = fileIterator.next();
             if (stat.getPath().getName().contains("test_" + year)) {
                 NegativeCleaningDriver.negativeCleaning(stat.getPath(), negativeOut);
                 ConsistentCleaningDriver.consistentCleaning(negativeOut, consistentOut);
                 NearbyCleaningDriver.nearbyCleaning(consistentOut, stat.getPath().getName());
-                SortDriver.sort(stat.getPath().getName());
+                SortDriver.sort(stat.getPath().getName(), partTmp, sortTmp);
             }
         }
     }
