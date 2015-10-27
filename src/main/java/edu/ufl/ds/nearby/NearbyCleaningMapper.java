@@ -27,7 +27,8 @@ public class NearbyCleaningMapper extends Mapper<LongWritable, Text, Text, Text>
 		String[] vals = parts[0].split(",");
 		String zone = vals[6];
 		String flow = vals[3];
-		String time = vals[1].substring(0, vals[1].length() - 6);
+		String time = vals[1].substring(0, 16);
+		System.out.println(time);
 		if (parts[1].equals("1")) {
 			String[] nearbyStr = nearbyZones.get(zone);
 			for (String z : nearbyStr) {

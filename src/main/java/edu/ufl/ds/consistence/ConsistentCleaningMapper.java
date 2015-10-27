@@ -22,14 +22,15 @@ public class ConsistentCleaningMapper extends
 		 * occupancy, [5] quality 0 - valid, 1 - invalid, 2 - incomplete, 3 -
 		 * unknown
 		 */
-		String[] parts = value.toString().split(",", 6);
+	    	String valStr = value.toString();
+		String[] parts = valStr.split(",", 6);
 		// if it is considered as wrong in previous job, no need to check it
 		// again
 		outputKey.set(parts[0]);
 
-		String[] tab_parts = value.toString().split("\t");
+		String[] tab_parts = valStr.split("\t");
 		if (tab_parts[1].equals("0")) {
-			outputVal.set(value.toString());
+			outputVal.set(valStr);
 			context.write(outputKey, outputVal);
 			return;
 		}
@@ -85,7 +86,7 @@ public class ConsistentCleaningMapper extends
 			if ((coefficient > 0 && coefficient < 1)
 					|| (coefficient > FACTOR_3D_THRESHOLD && occupancy < JAM_THRESHOLD)
 					|| (coefficient > 4 * FACTOR_3D_THRESHOLD && occupancy >= JAM_THRESHOLD)) {
-				reason = "Inconsistent speed, flow and occupancy(violate 2D model)";
+				reason = "Inconsistent speed, flow and occupancy(violate 3D model)";
 			}
 			// records reach this branch are considered as consistent
 			else {

@@ -18,7 +18,7 @@ public class NegativeCleaningMapper extends
 		String output = value.toString();
 		String[] parts = output.split(",");
 		String val = StringUtils.join(Arrays.copyOfRange(parts, 0, 7), ",");
-		outputKey.set(parts[6] + "," + parts[1].substring(0, parts[1].length() - 6));
+		outputKey.set(parts[6] + "," + parts[1].substring(0, 16));
 		outputVal.set(val + "," + parts[16] + "," + parts[17]);
 		context.write(outputKey, outputVal);
 	}
