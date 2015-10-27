@@ -34,9 +34,9 @@ public class ConsistentCleaningMapper extends
 			return;
 		}
 
-		int speed = Integer.parseInt(parts[2]);
+		double speed = Double.parseDouble(parts[2]);
 		int flow = Integer.parseInt(parts[3]);
-		int occupancy = Integer.parseInt(parts[4]);
+		double occupancy = Double.parseDouble(parts[4]);
 		// group by lane_id
 		// mean and std cleaning can be done in each group
 		String reason = "";
@@ -81,7 +81,7 @@ public class ConsistentCleaningMapper extends
 		// The normal detectable length of loop detector is about 5 feet
 		// so for sedans c is about 37, and for truck, c is about 104.17
 		else {
-			float coefficient = flow > 0 ? speed * occupancy / flow : 0.0f;
+			double coefficient = flow > 0 ? speed * occupancy / flow : 0.0f;
 			if ((coefficient > 0 && coefficient < 1)
 					|| (coefficient > FACTOR_3D_THRESHOLD && occupancy < JAM_THRESHOLD)
 					|| (coefficient > 4 * FACTOR_3D_THRESHOLD && occupancy >= JAM_THRESHOLD)) {

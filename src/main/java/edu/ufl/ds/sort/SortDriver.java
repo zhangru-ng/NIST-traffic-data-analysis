@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -20,7 +19,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.util.GenericOptionsParser;
+
+import edu.ufl.ds.Cleaning;
 
 public class SortDriver {
 
@@ -58,9 +58,16 @@ public class SortDriver {
         }
     }
 
-    public static void sort(String inputDir, String inputFile, String output)
+    public static void sort(Path inputPath)
             throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
         Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(new URI(Cleaning.outBucket), conf);
+
+        String outputName = inputPath.getName().replaceAll("test", "subm") + "_nist7.txt";
+        Path outPath = new Path(Cleaning.outBucket + "result/" + outputName);
+        if (fs.exists(outPath)) {
+            return;
+        }
 
         conf.set("mapreduce.output.textoutputformat.separator", ",");
         Job job = Job.getInstance(conf);
@@ -73,38 +80,21 @@ public class SortDriver {
         job.setReducerClass(SortReducer.class);
         job.setNumReduceTasks(1);
 
-        Path tmpPath = new Path(output + tmp + inputFile);
-        FileSystem fs = FileSystem.get(new URI(output), conf);
+        Path tmpPath = new Path(Cleaning.sortTmp);
+
         if (fs.exists(tmpPath)) {
             fs.delete(tmpPath, true);
         }
 
-        FileInputFormat.addInputPath(job, new Path(inputDir + inputFile));
+        FileInputFormat.addInputPath(job, inputPath);
         job.setInputFormatClass(TextInputFormat.class);
 
         job.setOutputFormatClass(TextOutputFormat.class);
         FileOutputFormat.setOutputPath(job, tmpPath);
 
         job.waitForCompletion(true);
-        String outputName = inputFile.replaceAll("test", "subm") + "_nist7.txt";
-        Path outPath = new Path(output + "result/" + outputName);
-        FileUtil.copyMerge(fs, tmpPath, fs, outPath, false,conf, "");
 
-    }
-
-    public static void main(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        String[] paths = new GenericOptionsParser(conf, args).getRemainingArgs();
-
-        Path inputPath = new Path(paths[0]);
-
-        FileSystem fs = FileSystem.get(new URI(paths[1]), conf);
-
-        // run on all cleaning_test file, run each file separately to preserve file name in result
-        FileStatus[] filestatus = fs.listStatus(inputPath);
-        for (FileStatus f : filestatus) {
-            SortDriver.sort(paths[0], f.getPath().getName(), paths[1]);
-        }
+        FileUtil.copyMerge(fs, tmpPath, fs, outPath, true, conf, "");
     }
 
 }

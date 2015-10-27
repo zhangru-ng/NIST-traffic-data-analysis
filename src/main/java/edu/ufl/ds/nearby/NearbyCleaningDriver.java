@@ -35,10 +35,10 @@ public class NearbyCleaningDriver {
 		job.setReducerClass(NearbyCleaningReducer.class);
 
 		String outputName = filename.substring(7).replaceAll(".csv", "");
-		Path outputPath = new Path(Cleaning.outBucket + outputName);
-        if (fs.exists(outputPath)) {
-            fs.delete(outputPath, true);
-        }
+		Path outputPath = new Path(Cleaning.outBucket + "nearby/" + outputName);
+                if (fs.exists(outputPath)) {
+                    return;
+                }
 
 		FileInputFormat.addInputPath(job, inputPath);
 		job.setInputFormatClass(TextInputFormat.class);
