@@ -58,12 +58,14 @@ public class SortDriver {
         }
     }
 
-    public static void sort(Path inputPath)
+    public static void sort(String filename)
             throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(new URI(Cleaning.outBucket), conf);
 
-        String outputName = inputPath.getName().replaceAll("test", "subm") + "_nist7.txt";
+        String inputDir = Cleaning.outBucket + "nearby/" + filename.substring(7).replaceAll(".csv", "");
+
+        String outputName = filename.substring(7).replaceAll(".csv", "_nist7.txt").replaceAll("test", "subm");
         Path outPath = new Path(Cleaning.outBucket + "result/" + outputName);
         if (fs.exists(outPath)) {
             return;
@@ -86,7 +88,7 @@ public class SortDriver {
             fs.delete(tmpPath, true);
         }
 
-        FileInputFormat.addInputPath(job, inputPath);
+        FileInputFormat.addInputPath(job, new Path(inputDir));
         job.setInputFormatClass(TextInputFormat.class);
 
         job.setOutputFormatClass(TextOutputFormat.class);

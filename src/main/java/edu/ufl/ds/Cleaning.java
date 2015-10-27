@@ -5,7 +5,6 @@ import java.io.InputStreamReader;
 import java.net.URI;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -47,7 +46,6 @@ public class Cleaning {
         RemoteIterator<LocatedFileStatus> fileIterator = fs.listFiles(inputPath, false);
         Path negativeOut = new Path(outBucket + year + "negative/");
         Path consistentOut = new Path(outBucket + year + "consistent/");
-        Path nearbyOut = new Path(outBucket + "nearby/");
         sortTmp = outBucket + year + "sort/";
         while (fileIterator.hasNext()) {
             LocatedFileStatus stat = fileIterator.next();
@@ -55,11 +53,8 @@ public class Cleaning {
                 NegativeCleaningDriver.negativeCleaning(stat.getPath(), negativeOut);
                 ConsistentCleaningDriver.consistentCleaning(negativeOut, consistentOut);
                 NearbyCleaningDriver.nearbyCleaning(consistentOut, stat.getPath().getName());
+                SortDriver.sort(stat.getPath().getName());
             }
-        }
-        FileStatus[] filestatus = fs.listStatus(nearbyOut);
-        for (FileStatus f : filestatus) {
-            SortDriver.sort(f.getPath());
         }
     }
 }
