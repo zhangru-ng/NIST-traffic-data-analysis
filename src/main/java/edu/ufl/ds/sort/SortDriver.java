@@ -23,7 +23,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 public class SortDriver {
-    private static String tmp = "sorttmp/";
 
     public static class LaneIdAndTimeComparator extends WritableComparator {
 
@@ -75,7 +74,6 @@ public class SortDriver {
         job.setNumReduceTasks(1);
 
         Path tmpPath = new Path(output + tmp + inputFile);
-
         FileSystem fs = FileSystem.get(new URI(output), conf);
         if (fs.exists(tmpPath)) {
             fs.delete(tmpPath, true);
@@ -90,7 +88,7 @@ public class SortDriver {
         job.waitForCompletion(true);
         String outputName = inputFile.replaceAll("test", "subm") + "_nist7.txt";
         Path outPath = new Path(output + "result/" + outputName);
-        FileUtil.copyMerge(fs, tmpPath, fs, outPath, true, conf, "");
+        FileUtil.copyMerge(fs, tmpPath, fs, outPath, false,conf, "");
 
     }
 

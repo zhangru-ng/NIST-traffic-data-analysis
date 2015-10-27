@@ -36,10 +36,10 @@ public class NearbyCleaningReducer extends Reducer<Text, Text, Text, Text> {
 		for (String s : rowsList) {
 			String parts[] = s.split("\t");
 			int flow = Integer.parseInt(parts[0].toString().split(",")[3]);
-			if (parts[1].equals("0")) {
-				outputKey.set(parts[0] + "\t0\t" + parts[2]);
+			if (parts[1].equals("0") && Math.abs(flow - mean) > 0) {
+				outputKey.set(parts[0] + "\t0\t" + mean + "\t" + parts[2]);
 			} else if (std != 0 && Math.abs(flow - mean) > 2 * std) {
-				outputKey.set(parts[0] + "\t0\t" + "\"unsimilar for nearby zones\"");
+				outputKey.set(parts[0] + "\t0\t" + mean + "\t\"unsimilar for nearby zones\"");
 			} else {
 				outputKey.set(parts[0] + "\t1");
 			}

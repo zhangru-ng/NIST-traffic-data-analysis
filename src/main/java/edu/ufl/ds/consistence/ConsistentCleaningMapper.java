@@ -45,6 +45,11 @@ public class ConsistentCleaningMapper extends
 		if (speed < 0) {
 			reason = "speed is negative ";
 		}
+		// flow = 0 means number of cars pass through in this interval is 0
+		// Since no car passes, we can't get average speed
+//		else if (flow == 0 && speed > 0) {
+//			reason = "Inconsistent speed and flow(flow = 0, speed > 0)";
+//		}
 		// when both flow and speed are 0, there may be no car at all or a jam
 		// note that speed is an integer and in mph, speed = 0 may means speed
 		// is less than 1 mph, the vehicle does not necessarily stop.

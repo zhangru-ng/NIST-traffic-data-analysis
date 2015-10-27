@@ -18,15 +18,17 @@ import edu.ufl.ds.negative.NegativeCleaningDriver;
 public class Cleaning {
     static public String outBucket = "";
     static public String nearbyZones = "";
+    static public String sortTmp = "";
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        String[] paths = new GenericOptionsParser(conf, args).getRemainingArgs();
+        String[] opts = new GenericOptionsParser(conf, args).getRemainingArgs();
 
-        Path inputPath = new Path(paths[0]);
-        outBucket = paths[1];
+        Path inputPath = new Path(opts[0]);
+        outBucket = opts[1];
+        String year = opts[2];
 
-        FileSystem fs = FileSystem.get(new URI(paths[1]), conf);
+        FileSystem fs = FileSystem.get(new URI(opts[1]), conf);
         StringBuffer nearbyBuffer = new StringBuffer();
 
         Path pt = new Path(outBucket + "nearby.csv");
@@ -41,14 +43,17 @@ public class Cleaning {
 
         // run on all cleaning_test file, run each file separately to preserve file name in result
         RemoteIterator<LocatedFileStatus> fileIterator = fs.listFiles(inputPath, false);
-        Path negativeOut = new Path(outBucket + "negative/");
-        Path consistentOut = new Path(outBucket + "consistent/");
-        Path nearbyOut = new Path(outBucket + "nearby/");
+        Path negativeOut = new Path(outBucket + year + "negative/");
+        Path consistentOut = new Path(outBucket + year + "consistent/");
+        Path nearbyOut = new Path(outBucket + year + "nearby/");
+        sortTmp = outBucket + year + "sort/";
         while (fileIterator.hasNext()) {
             LocatedFileStatus stat = fileIterator.next();
-            NegativeCleaningDriver.negativeCleaning(stat.getPath(), negativeOut);
-            ConsistentCleaningDriver.consistentCleaning(negativeOut, consistentOut);
-            NearbyCleaningDriver.nearbyCleaning(consistentOut, stat.getPath().getName());
+            if (stat.getPath().getName().contains("test_" + year)) {
+                NegativeCleaningDriver.negativeCleaning(stat.getPath(), negativeOut);
+                ConsistentCleaningDriver.consistentCleaning(negativeOut, consistentOut);
+                NearbyCleaningDriver.nearbyCleaning(consistentOut, stat.getPath().getName());
+            }
         }
     }
 }
