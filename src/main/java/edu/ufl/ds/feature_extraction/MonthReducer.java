@@ -1,11 +1,11 @@
-package edu.ufl.ds.exploratory;
+package edu.ufl.ds.feature_extraction;
 
 import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class DayReducer extends Reducer<Text, Text, Text, Text> {
+public class MonthReducer extends Reducer<Text, Text, Text, Text> {
 
 	public void reduce(Text key, Iterable<Text> values, Context context)
 			throws IOException, InterruptedException {

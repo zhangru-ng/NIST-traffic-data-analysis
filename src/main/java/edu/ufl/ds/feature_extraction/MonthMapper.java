@@ -1,4 +1,4 @@
-package edu.ufl.ds.exploratory;
+package edu.ufl.ds.feature_extraction;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -12,7 +12,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class DayMapper extends Mapper<LongWritable, Text, Text, Text> {
+public class MonthMapper extends Mapper<LongWritable, Text, Text, Text> {
 
 	@Override
 	public void map(LongWritable key, Text value1, Context context)
@@ -33,7 +33,7 @@ public class DayMapper extends Mapper<LongWritable, Text, Text, Text> {
 			context.write(new Text(k[0] + "," + k[1] + "," + dayOfTheWeek),
 					new Text(input[1]));
 		} catch (Exception ex) {
-			Logger.getLogger(DayMapper.class.getName()).log(Level.SEVERE, null,
+			Logger.getLogger(MonthMapper.class.getName()).log(Level.SEVERE, null,
 					ex);
 			ex.printStackTrace();
 		}
