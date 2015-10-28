@@ -6,21 +6,21 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class SortMapper extends Mapper<LongWritable, Text, Text, Text> {
-    private Text outputKey = new Text();
-    private Text outputVal = new Text();
+import edu.ufl.ds.sort.SortDriver.LaneIdAndTimePair;
+
+public class SortMapper extends Mapper<LongWritable, Text, LaneIdAndTimePair, Text> {
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String[] parts = value.toString().split(",", 3);
-        outputKey.set(parts[0] + "," + convert(parts[1].substring(8, parts[1].length() - 3)));
-        outputVal.set(value);
-        context.write(outputKey, outputVal);
+        int lane_id = Integer.parseInt(parts[0]);
+        long timestamp = convert(parts[1].substring(8, parts[1].length() - 3));
+        context.write(new LaneIdAndTimePair(lane_id, timestamp), value);
     }
 
     public long convert(String time) {
 	String[] dayParts = time.split(" ");
 	int day = Integer.parseInt(dayParts[0]);
-	String[] milliParts = time.split(".");
+	String[] milliParts = dayParts[1].split("\\.");
 	int millis = milliParts.length > 1 ? Integer.parseInt(milliParts[1]) : 0;
 	String[] timeParts = milliParts[0].split(":");
 	int hour = Integer.parseInt(timeParts[0]);

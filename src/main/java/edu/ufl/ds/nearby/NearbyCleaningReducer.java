@@ -27,18 +27,20 @@ public class NearbyCleaningReducer extends Reducer<Text, Text, Text, Text> {
 				rowsList.add(v.toString());
 			}
 		}
-		mean = count > 0 ? mean / count : 0.0;
-		for (int i : flowList) {
+		if (count > 0) {
+		    mean /= count;
+		    for (int i : flowList) {
 			std += (i - mean) * (i - mean);
+		    }
+		    std = Math.sqrt(std / count);
 		}
-		std = Math.sqrt(std / count);
 
 		for (String s : rowsList) {
 			String parts[] = s.split("\t");
 			int flow = Integer.parseInt(parts[0].toString().split(",")[3]);
-			if (parts[1].equals("0") && Math.abs(flow - mean) > 0) {
+			if (parts[1].equals("0") && Math.abs(flow - mean) > 1e-6) {
 				outputKey.set(parts[0] + "\t0\t" + mean + "\t" + parts[2]);
-			} else if (std != 0 && Math.abs(flow - mean) > 2 * std) {
+			} else if (std > 1e-6 && Math.abs(flow - mean) > 2 * std) {
 				outputKey.set(parts[0] + "\t0\t" + mean + "\t\"unsimilar for nearby zones\"");
 			} else {
 				outputKey.set(parts[0] + "\t1");

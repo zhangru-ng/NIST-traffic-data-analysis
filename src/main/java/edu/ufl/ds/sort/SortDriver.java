@@ -17,8 +17,10 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.InputSampler;
 import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
@@ -27,13 +29,21 @@ import edu.ufl.ds.Cleaning;
 
 public class SortDriver {
 
-    public class LaneIdAndTimePair implements WritableComparable<LaneIdAndTimePair> {
+    public static class LaneIdAndTimePair implements WritableComparable<LaneIdAndTimePair> {
 	    private IntWritable lane_id;
 	    private LongWritable timestamp;
 
+	    public LaneIdAndTimePair() {
+	        set(new IntWritable(), new LongWritable());
+	    }
+
 	    public LaneIdAndTimePair(int lane_id, long timestamp) {
-	        this.lane_id = new IntWritable(lane_id);
-	        this.timestamp = new LongWritable();
+	        set(new IntWritable(lane_id), new LongWritable(timestamp));
+	    }
+
+	    public void set(IntWritable lane_id, LongWritable timestamp) {
+		this.lane_id = lane_id;
+	        this.timestamp = timestamp;
 	    }
 
 	    @Override
@@ -53,6 +63,15 @@ public class SortDriver {
 	    public void write(DataOutput out) throws IOException {
 		lane_id.write(out);
 		timestamp.write(out);
+	    }
+
+	    @Override
+	    public boolean equals(Object o) {
+	        if (o instanceof LaneIdAndTimePair) {
+	            LaneIdAndTimePair lt = (LaneIdAndTimePair) o;
+	            return lane_id.equals(lt.lane_id) && timestamp.equals(lt.timestamp);
+	        }
+	        return false;
 	    }
 	}
 
@@ -78,7 +97,7 @@ public class SortDriver {
         @SuppressWarnings("rawtypes")
         @Override
         public int compare(WritableComparable w1, WritableComparable w2) {
-            LaneIdAndTimePair pair1 = (LaneIdAndTimePair) w1;
+    	    LaneIdAndTimePair pair1 = (LaneIdAndTimePair) w1;
             LaneIdAndTimePair pair2 = (LaneIdAndTimePair) w2;
             int cmp = Long.compare(pair1.timestamp.get(), pair2.timestamp.get());
             if (cmp != 0) {
@@ -89,7 +108,6 @@ public class SortDriver {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static void sort(String input, String partition, String tmp)
             throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
         Configuration conf = new Configuration();
@@ -102,46 +120,54 @@ public class SortDriver {
         }
 
         conf.set("mapreduce.output.textoutputformat.separator", ",");
-        Job job = Job.getInstance(conf);
-        job.setJarByClass(SortDriver.class);
+        Job preJob = Job.getInstance(conf);
+        preJob.setJarByClass(SortDriver.class);
 
-        job.setMapperClass(SortMapper.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        preJob.setMapperClass(SortMapper.class);
+        preJob.setOutputKeyClass(LaneIdAndTimePair.class);
+        preJob.setOutputValueClass(Text.class);
+        preJob.setNumReduceTasks(0);
 
-        job.setPartitionerClass(TotalOrderPartitioner.class);
-        job.setSortComparatorClass(LaneIdAndTimeComparator.class);
-        job.setReducerClass(SortReducer.class);
+        String inputDir = Cleaning.outBucket + "nearby/" + input.substring(7).replaceAll(".csv", "");
+        FileInputFormat.addInputPath(preJob, new Path(inputDir));
+        preJob.setInputFormatClass(TextInputFormat.class);
+
+        preJob.setOutputFormatClass(SequenceFileOutputFormat.class);
+        SequenceFileOutputFormat.setOutputPath(preJob, new Path(Cleaning.outBucket + "pre/"));
+        preJob.waitForCompletion(true);
 
         Path tmpPath = new Path(tmp);
         if (fs.exists(tmpPath)) {
             fs.delete(tmpPath, true);
         }
 
-        String inputDir = Cleaning.outBucket + "nearby/" + input.substring(7).replaceAll(".csv", "");
-        FileInputFormat.addInputPath(job, new Path(inputDir));
-        job.setInputFormatClass(TextInputFormat.class);
+        Job job = Job.getInstance(conf);
 
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        SequenceFileInputFormat.setInputPaths(job, new Path(Cleaning.outBucket + "pre/"));
         Path partPath = new Path(partition);
         if (fs.exists(partPath)) {
             fs.delete(partPath, true);
         }
 
-        Path partitionFile = new Path(partPath, "partitioning");
-        TotalOrderPartitioner.setPartitionFile(conf, partitionFile);
+        job.setReducerClass(SortReducer.class);
+        job.setOutputKeyClass(LaneIdAndTimePair.class);
+        job.setOutputValueClass(Text.class);
+        job.setPartitionerClass(TotalOrderPartitioner.class);
+        job.setSortComparatorClass(LaneIdAndTimeComparator.class);
+        TotalOrderPartitioner.setPartitionFile(job.getConfiguration(), partPath);
 
         double pcnt = 10.0;
-        int numReduceTasks = 10;
+        int numReduceTasks = 2;
+        job.setNumReduceTasks(numReduceTasks);
         int numSamples = numReduceTasks;
         int maxSplits = numReduceTasks - 1;
 
-        @SuppressWarnings("rawtypes")
-	InputSampler.Sampler sampler = new InputSampler.RandomSampler(pcnt, numSamples, maxSplits);
-        InputSampler.writePartitionFile(job, sampler);
+        InputSampler.Sampler<LaneIdAndTimePair, Text> sampler = new InputSampler.RandomSampler<LaneIdAndTimePair, Text>(pcnt, numSamples, maxSplits);
+        InputSampler.<LaneIdAndTimePair, Text>writePartitionFile(job, sampler);
 
         job.setOutputFormatClass(TextOutputFormat.class);
         FileOutputFormat.setOutputPath(job, tmpPath);
-
         job.waitForCompletion(true);
         FileUtil.copyMerge(fs, tmpPath, fs, outPath, true, conf, "");
     }

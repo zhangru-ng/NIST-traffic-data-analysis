@@ -50,11 +50,17 @@ public class Cleaning {
 
         while (fileIterator.hasNext()) {
             LocatedFileStatus stat = fileIterator.next();
-            if (stat.getPath().getName().contains("test_" + year)) {
+            String filename = stat.getPath().getName();
+            if (filename.contains("test_" + year)) {
+//        	String outputName = filename.substring(7).replaceAll(".csv", "");
+//		Path outputPath = new Path(Cleaning.outBucket + "nearby/" + outputName);
+//                if (fs.exists(outputPath)) {
+//                    continue;
+//                }
                 NegativeCleaningDriver.negativeCleaning(stat.getPath(), negativeOut);
                 ConsistentCleaningDriver.consistentCleaning(negativeOut, consistentOut);
-                NearbyCleaningDriver.nearbyCleaning(consistentOut, stat.getPath().getName());
-                SortDriver.sort(stat.getPath().getName(), partTmp, sortTmp);
+                NearbyCleaningDriver.nearbyCleaning(consistentOut, filename);
+                SortDriver.sort(filename, partTmp, sortTmp);
             }
         }
     }
