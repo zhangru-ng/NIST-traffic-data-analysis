@@ -17,13 +17,9 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.mapreduce.lib.partition.InputSampler;
-import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
 
 import edu.ufl.ds.Cleaning;
 
@@ -119,55 +115,28 @@ public class SortDriver {
             return;
         }
 
-        conf.set("mapreduce.output.textoutputformat.separator", ",");
-        Job preJob = Job.getInstance(conf);
-        preJob.setJarByClass(SortDriver.class);
+        Job job = Job.getInstance(conf);
+        job.setJarByClass(SortDriver.class);
 
-        preJob.setMapperClass(SortMapper.class);
-        preJob.setOutputKeyClass(LaneIdAndTimePair.class);
-        preJob.setOutputValueClass(Text.class);
-        preJob.setNumReduceTasks(0);
-
-        String inputDir = Cleaning.outBucket + "nearby/" + input.substring(7).replaceAll(".csv", "");
-        FileInputFormat.addInputPath(preJob, new Path(inputDir));
-        preJob.setInputFormatClass(TextInputFormat.class);
-
-        preJob.setOutputFormatClass(SequenceFileOutputFormat.class);
-        SequenceFileOutputFormat.setOutputPath(preJob, new Path(Cleaning.outBucket + "pre/"));
-        preJob.waitForCompletion(true);
+        job.setMapperClass(SortMapper.class);
+        job.setOutputKeyClass(LaneIdAndTimePair.class);
+        job.setOutputValueClass(Text.class);
+        job.setSortComparatorClass(LaneIdAndTimeComparator.class);
+        job.setReducerClass(SortReducer.class);
+        job.setNumReduceTasks(1);
 
         Path tmpPath = new Path(tmp);
+
         if (fs.exists(tmpPath)) {
             fs.delete(tmpPath, true);
         }
-
-        Job job = Job.getInstance(conf);
-
-        job.setInputFormatClass(SequenceFileInputFormat.class);
-        SequenceFileInputFormat.setInputPaths(job, new Path(Cleaning.outBucket + "pre/"));
-        Path partPath = new Path(partition);
-        if (fs.exists(partPath)) {
-            fs.delete(partPath, true);
-        }
-
-        job.setReducerClass(SortReducer.class);
-        job.setOutputKeyClass(LaneIdAndTimePair.class);
-        job.setOutputValueClass(Text.class);
-        job.setPartitionerClass(TotalOrderPartitioner.class);
-        job.setSortComparatorClass(LaneIdAndTimeComparator.class);
-        TotalOrderPartitioner.setPartitionFile(job.getConfiguration(), partPath);
-
-        double pcnt = 10.0;
-        int numReduceTasks = 2;
-        job.setNumReduceTasks(numReduceTasks);
-        int numSamples = numReduceTasks;
-        int maxSplits = numReduceTasks - 1;
-
-        InputSampler.Sampler<LaneIdAndTimePair, Text> sampler = new InputSampler.RandomSampler<LaneIdAndTimePair, Text>(pcnt, numSamples, maxSplits);
-        InputSampler.<LaneIdAndTimePair, Text>writePartitionFile(job, sampler);
+        String inputDir = Cleaning.outBucket + "nearby/" + input.substring(7).replaceAll(".csv", "");
+        FileInputFormat.addInputPath(job, new Path(inputDir));
+        job.setInputFormatClass(TextInputFormat.class);
 
         job.setOutputFormatClass(TextOutputFormat.class);
         FileOutputFormat.setOutputPath(job, tmpPath);
+
         job.waitForCompletion(true);
         FileUtil.copyMerge(fs, tmpPath, fs, outPath, true, conf, "");
     }

@@ -52,14 +52,13 @@ public class Cleaning {
             LocatedFileStatus stat = fileIterator.next();
             String filename = stat.getPath().getName();
             if (filename.contains("test_" + year)) {
-//        	String outputName = filename.substring(7).replaceAll(".csv", "");
-//		Path outputPath = new Path(Cleaning.outBucket + "nearby/" + outputName);
-//                if (fs.exists(outputPath)) {
-//                    continue;
-//                }
-                NegativeCleaningDriver.negativeCleaning(stat.getPath(), negativeOut);
-                ConsistentCleaningDriver.consistentCleaning(negativeOut, consistentOut);
-                NearbyCleaningDriver.nearbyCleaning(consistentOut, filename);
+        	String outputName = filename.substring(7).replaceAll(".csv", "");
+		Path outputPath = new Path(Cleaning.outBucket + "nearby/" + outputName);
+                if (!fs.exists(outputPath)) {
+                    NegativeCleaningDriver.negativeCleaning(stat.getPath(), negativeOut);
+                    ConsistentCleaningDriver.consistentCleaning(negativeOut, consistentOut);
+                    NearbyCleaningDriver.nearbyCleaning(consistentOut, filename);
+                }
                 SortDriver.sort(filename, partTmp, sortTmp);
             }
         }
