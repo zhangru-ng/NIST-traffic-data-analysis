@@ -47,7 +47,7 @@ public class FeatureExtractionDriver {
 		job.setReducerClass(FeatureExtractionReducer.class);
 		job.setNumReduceTasks(1);
 
-		Path tmpPath = new Path(outputDir + "temp");
+		Path tmpPath = new Path(outputDir + "temp1");
 
 		if (fs.exists(tmpPath)) {
 			fs.delete(tmpPath, true);

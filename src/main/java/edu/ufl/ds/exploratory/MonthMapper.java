@@ -1,4 +1,4 @@
-package edu.ufl.ds.feature_extraction;
+package edu.ufl.ds.exploratory;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -18,15 +18,23 @@ public class MonthMapper extends Mapper<LongWritable, Text, Text, Text> {
 	public void map(LongWritable key, Text value1, Context context)
 
 	throws IOException, InterruptedException {
-		String[] input = value1.toString().split("\t");
+		System.out.println("---" + value1.toString());
+		String[] input = value1.toString().split(":");
 		try {
 			System.out.println(input[0]);
 			String[] k = input[0].split(",");
-			context.write(new Text(k[0] + "," + k[1].substring(0, 7) + ","
-					+ k[7] + "," + k[8]), value1);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Date date = sdf.parse(k[2]);
+
+			Calendar calendar = GregorianCalendar.getInstance();
+			calendar.setTime(date);
+			int dayOfTheWeek = calendar.get(Calendar.DAY_OF_WEEK);
+			System.out.println(dayOfTheWeek);
+			context.write(new Text(k[0] + "," + k[1] + "," + dayOfTheWeek),
+					new Text(input[1]));
 		} catch (Exception ex) {
-			Logger.getLogger(MonthMapper.class.getName()).log(Level.SEVERE,
-					null, ex);
+			Logger.getLogger(MonthMapper.class.getName()).log(Level.SEVERE, null,
+					ex);
 			ex.printStackTrace();
 		}
 	}

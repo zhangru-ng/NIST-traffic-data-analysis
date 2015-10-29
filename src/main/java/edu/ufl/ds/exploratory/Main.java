@@ -1,4 +1,4 @@
-package edu.ufl.ds.feature_extraction;
+package edu.ufl.ds.exploratory;
 
 import java.io.IOException;
 
@@ -14,6 +14,9 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import edu.ufl.ds.exploratory.LaneDetectorMapper;
+import edu.ufl.ds.exploratory.LaneDetectorReducer;
+
 public class Main extends Configured implements Tool {
 	public static void main(String[] args) throws Exception {
 		ToolRunner.run(new Configuration(), new Main(), args);
@@ -23,11 +26,8 @@ public class Main extends Configured implements Tool {
 	public int run(String args[]) {
 		try {
 			long time = System.currentTimeMillis();
-			// "/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/cleaned_data",
-			// "/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/temp/output",
-
-			Job job = createJob(args[0]+"/*", args[1], MonthMapper.class,
-					MonthReducer.class);
+			Job job = createJob(args[1] + time + "/hourly", args[1] + time
+					+ "/day", MonthMapper.class, MonthReducer.class);
 
 			job.waitForCompletion(true);
 		} catch (InterruptedException | ClassNotFoundException | IOException e) {
@@ -45,7 +45,7 @@ public class Main extends Configured implements Tool {
 		conf.set(
 				"io.serializations",
 				"org.apache.hadoop.io.serializer.JavaSerialization,org.apache.hadoop.io.serializer.WritableSerialization");
-		conf.set("mapreduce.output.textoutputformat.separator", ",");
+		conf.set("mapreduce.output.textoutputformat.separator", ":");
 		Job job = Job.getInstance(conf);
 		job.setJarByClass(Main.class);
 
