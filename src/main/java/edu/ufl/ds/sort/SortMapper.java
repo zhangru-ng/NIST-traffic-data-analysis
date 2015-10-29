@@ -21,7 +21,10 @@ public class SortMapper extends Mapper<LongWritable, Text, LaneIdAndTimePair, Te
 	String[] dayParts = time.split(" ");
 	int day = Integer.parseInt(dayParts[0]);
 	String[] milliParts = dayParts[1].split("\\.");
-	int millis = milliParts.length > 1 ? Integer.parseInt(milliParts[1]) : 0;
+	int millis = 0;
+	if (milliParts.length > 1) {
+	    millis = Integer.parseInt(String.format("%-3s", milliParts[1]).replace(' ', '0'));
+	}
 	String[] timeParts = milliParts[0].split(":");
 	int hour = Integer.parseInt(timeParts[0]);
 	int minute = Integer.parseInt(timeParts[1]);
