@@ -14,9 +14,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import edu.ufl.ds.exploratory.LaneDetectorMapper;
-import edu.ufl.ds.exploratory.LaneDetectorReducer;
-
 public class Main extends Configured implements Tool {
 	public static void main(String[] args) throws Exception {
 		ToolRunner.run(new Configuration(), new Main(), args);
@@ -26,10 +23,13 @@ public class Main extends Configured implements Tool {
 	public int run(String args[]) {
 		try {
 			long time = System.currentTimeMillis();
-			Job job = createJob(args[1] + time + "/hourly", args[1] + time
-					+ "/day", MonthMapper.class, MonthReducer.class);
+			Job job1 = createJob(args[0], args[1] + time + "/hourly",
+					LaneDetectorMapper.class, LaneDetectorReducer.class);
+			Job job2 = createJob(args[1] + time + "/hourly", args[1] + time
+					+ "/day", DayMapper.class, DayReducer.class);
 
-			job.waitForCompletion(true);
+			job1.waitForCompletion(true);
+			job2.waitForCompletion(true);
 		} catch (InterruptedException | ClassNotFoundException | IOException e) {
 			System.err.println("Error during mapreduce job.");
 			e.printStackTrace();

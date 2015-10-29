@@ -21,12 +21,15 @@ public class SortMapper extends Mapper<LongWritable, Text, LaneIdAndTimePair, Te
 	String[] dayParts = time.split(" ");
 	int day = Integer.parseInt(dayParts[0]);
 	String[] milliParts = dayParts[1].split("\\.");
-	int millis = milliParts.length > 1 ? Integer.parseInt(milliParts[1]) : 0;
+	int millis = 0;
+	if (milliParts.length > 1) {
+	    millis = Integer.parseInt(String.format("%-6s", milliParts[1]).replace(' ', '0'));
+	}
 	String[] timeParts = milliParts[0].split(":");
 	int hour = Integer.parseInt(timeParts[0]);
 	int minute = Integer.parseInt(timeParts[1]);
 	int second = Integer.parseInt(timeParts[2]);
-	long timestamp = (((day * 24L + hour) * 60 + minute) * 60 + second) * 1000 + millis;
+	long timestamp = (((day * 24L + hour) * 60L + minute) * 60L + second) * 1000000L + millis;
 	return timestamp;
     }
 }
