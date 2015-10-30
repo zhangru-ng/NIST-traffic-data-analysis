@@ -8,8 +8,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class FeatureExtractionMapper extends
-		Mapper<LongWritable, Text, Text, Text> {
+public class FeatureExtractionMapper extends Mapper<LongWritable, Text, Text, Text> {
 	private Text outputKey = new Text();
 	private Text outputVal = new Text();
 
@@ -57,7 +56,7 @@ public class FeatureExtractionMapper extends
 		}
 
 		public Box(String z) {
-			String[] temp = z.split("\t");
+			String[] temp = z.split(",");
 
 			this.lat1 = Double.parseDouble(temp[0]);
 			this.long1 = Double.parseDouble(temp[1]);
@@ -79,9 +78,8 @@ public class FeatureExtractionMapper extends
 	private static ArrayList<Box> boundingBoxes = null;
 
 	@Override
-	public void map(LongWritable key, Text value, Context context)
-			throws IOException, InterruptedException {
-		// System.out.println(value.toString());
+	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+
 		try {
 			if (boundingBoxes == null) {
 				boundingBoxes = new ArrayList<>();
@@ -101,8 +99,7 @@ public class FeatureExtractionMapper extends
 				int n = parts.length;
 				if (parts[0].trim().matches(regex)) {
 					for (Box box : boundingBoxes) {
-						if (box.isInBox(Double.parseDouble(parts[n - 5]),
-								Double.parseDouble(parts[n - 4]))) {
+						if (box.isInBox(Double.parseDouble(parts[n - 5]), Double.parseDouble(parts[n - 4]))) {
 							outputKey.set(box + ":" + parts[1].substring(0, 7));
 							outputVal.set("flow," + parts[3]);
 							context.write(outputKey, outputVal);
@@ -122,10 +119,8 @@ public class FeatureExtractionMapper extends
 						n++;
 					}
 					for (Box box : boundingBoxes) {
-						if (box.isInBox(Double.parseDouble(parts[n - 4]),
-								Double.parseDouble(parts[n - 3]))) {
-							outputKey.set(box + ":"
-									+ parts[n - 9].substring(0, 7));
+						if (box.isInBox(Double.parseDouble(parts[n - 4]), Double.parseDouble(parts[n - 3]))) {
+							outputKey.set(box + ":" + parts[n - 9].substring(0, 7));
 							outputVal.set(parts[n - 7] + ",1");
 							context.write(outputKey, outputVal);
 						}
@@ -133,8 +128,7 @@ public class FeatureExtractionMapper extends
 				}
 			}
 		} catch (Exception e) {
-			System.out.println(value.toString());
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 }

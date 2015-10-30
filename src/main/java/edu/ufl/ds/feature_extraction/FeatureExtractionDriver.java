@@ -18,17 +18,15 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class FeatureExtractionDriver {
 
-	public static void extractionDriver(String inputDir, String outputDir,
-			String boundingBoxesFile) throws ClassNotFoundException,
-			IOException, InterruptedException, URISyntaxException {
+	public static void extractionDriver(String inputDir, String outputDir, String boundingBoxesFile)
+			throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(new URI(outputDir + "output"), conf);
 
 		FileSystem fss = FileSystem.get(new URI(boundingBoxesFile), conf);
 		StringBuffer nearbyBuffer = new StringBuffer();
-		Path pt = new Path(boundingBoxesFile + "/boxes.tsv");
-		BufferedReader br = new BufferedReader(new InputStreamReader(
-				fss.open(pt)));
+		Path pt = new Path(boundingBoxesFile);
+		BufferedReader br = new BufferedReader(new InputStreamReader(fss.open(pt)));
 		String line;
 		line = br.readLine();
 		while (line != null) {
@@ -63,13 +61,15 @@ public class FeatureExtractionDriver {
 
 	}
 
-	public static void main(String[] args) throws ClassNotFoundException,
-			IOException, InterruptedException, URISyntaxException {
+	public static void main(String[] args)
+			throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
 
-		FeatureExtractionDriver
-				.extractionDriver(
-						"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/temp",
-						"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/",
-						"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources");
+		// FeatureExtractionDriver.extractionDriver("/Users/pranav/NIST/NIST_traffic_data_analysis/input/events100.csv",
+		// "/Users/pranav/NIST/NIST_traffic_data_analysis/output",
+		// "/Users/pranav/NIST/NIST_traffic_data_analysis/bb10.csv");
+		System.out.println(args[0]);
+		System.out.println(args[1]);
+		System.out.println(args[2]);
+		FeatureExtractionDriver.extractionDriver(args[0], args[1], args[2]);
 	}
 }

@@ -14,7 +14,6 @@ public class FeatureExtractionReducer extends
 	@Override
 	public void reduce(Text key, Iterable<Text> values, Context context)
 			throws IOException, InterruptedException {
-		System.out.println(key.toString());
 		HashMap<String, Integer> map = new HashMap<>();
 		map.put("accidentsAndIncidents", 0);
 		map.put("roadwork", 1);
@@ -28,7 +27,6 @@ public class FeatureExtractionReducer extends
 		int[] counts = new int[map.size()];
 		double[] fvalue = new double[map.size()];
 		for (Text v : values) {
-			System.out.println(v.toString());
 			String temp[] = v.toString().split(",");
 			if (map.containsKey(temp[0])) {
 				fvalue[map.get(temp[0])] += Double.parseDouble(temp[1].trim());
@@ -46,8 +44,12 @@ public class FeatureExtractionReducer extends
 			} else
 				ss += "," + counts[i];
 		}
-		outputKey.set(keyParts[0] + "," + keyParts[1] + "-01," + keyParts[1]
-				+ "-31" + ss);
+		// The KeyParts[1] has the Year and Month
+		String[] parts = keyParts[1].toString().split("-");
+//		outputKey.set(keyParts[0] + "," + keyParts[1] + "-01," + keyParts[1]
+//				+ "-31" + ss);
+		
+		outputKey.set(keyParts[0] + "," + parts[0] + "," + parts[1] + ss);
 		context.write(outputKey, null);
 	}
 }
