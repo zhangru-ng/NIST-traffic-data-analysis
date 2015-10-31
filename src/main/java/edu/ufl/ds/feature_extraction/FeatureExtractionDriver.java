@@ -26,7 +26,7 @@ public class FeatureExtractionDriver {
 
 		FileSystem fss = FileSystem.get(new URI(boundingBoxesFile), conf);
 		StringBuffer nearbyBuffer = new StringBuffer();
-		Path pt = new Path(boundingBoxesFile + "/boxes.tsv");
+		Path pt = new Path(boundingBoxesFile);
 		BufferedReader br = new BufferedReader(new InputStreamReader(
 				fss.open(pt)));
 		String line;
@@ -47,7 +47,7 @@ public class FeatureExtractionDriver {
 		job.setReducerClass(FeatureExtractionReducer.class);
 		job.setNumReduceTasks(1);
 
-		Path tmpPath = new Path(outputDir + "temp1");
+		Path tmpPath = new Path(outputDir + "temp");
 
 		if (fs.exists(tmpPath)) {
 			fs.delete(tmpPath, true);
@@ -66,10 +66,6 @@ public class FeatureExtractionDriver {
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException, InterruptedException, URISyntaxException {
 
-		FeatureExtractionDriver
-				.extractionDriver(
-						"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/temp",
-						"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/",
-						"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources");
+		FeatureExtractionDriver.extractionDriver(args[0], args[1], args[2]);
 	}
 }

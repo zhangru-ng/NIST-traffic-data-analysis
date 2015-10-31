@@ -81,7 +81,7 @@ public class FeatureExtractionMapper extends
 	@Override
 	public void map(LongWritable key, Text value, Context context)
 			throws IOException, InterruptedException {
-		// System.out.println(value.toString());
+		System.out.println(value.toString());
 		try {
 			if (boundingBoxes == null) {
 				boundingBoxes = new ArrayList<>();
@@ -97,14 +97,19 @@ public class FeatureExtractionMapper extends
 			if (!input.contains("event_id")) {
 
 				String temp = value.toString();
-				String[] parts = value.toString().split(",");
+				String[] inputParts = input.split("\t");
+				String[] parts = inputParts[0].split(",");
 				int n = parts.length;
 				if (parts[0].trim().matches(regex)) {
 					for (Box box : boundingBoxes) {
-						if (box.isInBox(Double.parseDouble(parts[n - 5]),
-								Double.parseDouble(parts[n - 4]))) {
+						if (box.isInBox(Double.parseDouble(parts[7]),
+								Double.parseDouble(parts[8]))) {
+							String tempFlow = parts[3];
+							if (inputParts[1].equals("0")) {
+								tempFlow = inputParts[2];
+							}
 							outputKey.set(box + ":" + parts[1].substring(0, 7));
-							outputVal.set("flow," + parts[3]);
+							outputVal.set("flow," + tempFlow);
 							context.write(outputKey, outputVal);
 							outputKey.set(box + ":" + parts[1].substring(0, 7));
 							outputVal.set("speed," + parts[2]);

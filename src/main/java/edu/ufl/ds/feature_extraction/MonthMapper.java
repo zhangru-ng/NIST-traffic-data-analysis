@@ -18,7 +18,7 @@ public class MonthMapper extends Mapper<LongWritable, Text, Text, Text> {
 	public void map(LongWritable key, Text value1, Context context)
 
 	throws IOException, InterruptedException {
-		String[] input = value1.toString().split("\t");
+		String[] input = value1.toString().split(",");
 		try {
 			System.out.println(input[0]);
 			String[] k = input[0].split(",");

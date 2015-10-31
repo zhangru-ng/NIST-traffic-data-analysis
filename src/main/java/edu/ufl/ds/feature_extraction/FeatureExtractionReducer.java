@@ -26,28 +26,18 @@ public class FeatureExtractionReducer extends
 		map.put("flow", 7);
 		map.put("occupancy", 8);
 		int[] counts = new int[map.size()];
-		double[] fvalue = new double[map.size()];
 		for (Text v : values) {
-			System.out.println(v.toString());
 			String temp[] = v.toString().split(",");
 			if (map.containsKey(temp[0])) {
-				fvalue[map.get(temp[0])] += Double.parseDouble(temp[1].trim());
 				counts[map.get(temp[0])]++;
 			}
 		}
 		String[] keyParts = key.toString().split(":");
 		String ss = "";
-		for (int i = 0; i < counts.length; i++) {
-			if (i >= 6) {
-				if (counts[i] == 0)
-					ss += ",0";
-				else
-					ss += "," + (fvalue[i] / counts[i]);
-			} else
-				ss += "," + counts[i];
+		for (int i = 0; i < 6; i++) {
+			ss += "," + counts[i];
 		}
-		outputKey.set(keyParts[0] + "," + keyParts[1] + "-01," + keyParts[1]
-				+ "-31" + ss);
+		outputKey.set(keyParts[0] + "," + keyParts[1] + ss);
 		context.write(outputKey, null);
 	}
 }
