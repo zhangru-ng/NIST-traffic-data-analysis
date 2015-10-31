@@ -18,7 +18,7 @@ public class MonthMapper extends Mapper<LongWritable, Text, Text, Text> {
 		try {
 			String[] k = input.split(",");
 			context.write(new Text(k[0] + "," + k[1] + "," + k[2] + "," + k[3]
-					+ "," + k[4].substring(4)), value1);
+					+ "," + k[4].substring(5)), value1);
 		} catch (Exception ex) {
 			Logger.getLogger(MonthMapper.class.getName()).log(Level.SEVERE,
 					null, ex);
