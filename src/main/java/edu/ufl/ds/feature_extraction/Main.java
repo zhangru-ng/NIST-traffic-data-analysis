@@ -27,8 +27,8 @@ public class Main extends Configured implements Tool {
 			// "/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/temp/output",
 
 			Job job = createJob(
-					"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/features",
-					"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/result",
+					"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/resulttemp",
+					"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/final_result",
 					MonthMapper.class, MonthReducer.class);
 
 			job.waitForCompletion(true);
