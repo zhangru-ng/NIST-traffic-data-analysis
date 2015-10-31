@@ -94,48 +94,40 @@ public class FeatureExtractionMapper extends
 			String input = value.toString();
 			String regex = "^\\d+$";
 
-			if (!input.contains("event_id")) {
+			if (!input.contains("created_tstamp")) {
 
-				String temp = value.toString();
-				String[] inputParts = input.split("\t");
-				String[] parts = inputParts[0].split(",");
-				int n = parts.length;
-				if (parts[0].trim().matches(regex)) {
-					for (Box box : boundingBoxes) {
-						if (box.isInBox(Double.parseDouble(parts[7]),
-								Double.parseDouble(parts[8]))) {
-							String tempFlow = parts[3];
-							if (inputParts[1].equals("0")) {
-								tempFlow = inputParts[2];
-							}
-							outputKey.set(box + ":" + parts[1].substring(0, 7));
-							outputVal.set("flow," + tempFlow);
-							context.write(outputKey, outputVal);
-							outputKey.set(box + ":" + parts[1].substring(0, 7));
-							outputVal.set("speed," + parts[2]);
-							context.write(outputKey, outputVal);
-							outputKey.set(box + ":" + parts[1].substring(0, 7));
-							outputVal.set("occupancy," + parts[4]);
-							context.write(outputKey, outputVal);
-
-						}
-					}
-				} else {
-
-					if (temp.charAt(temp.length() - 1) == ',') {
-						temp = temp.substring(0, temp.length() - 1);
-						n++;
-					}
-					for (Box box : boundingBoxes) {
-						if (box.isInBox(Double.parseDouble(parts[n - 4]),
-								Double.parseDouble(parts[n - 3]))) {
-							outputKey.set(box + ":"
-									+ parts[n - 9].substring(0, 7));
-							outputVal.set(parts[n - 7] + ",1");
-							context.write(outputKey, outputVal);
-						}
+				// String[] inputParts = input.split("\t");
+				// if (parts[0].trim().matches(regex)) {
+				// for (Box box : boundingBoxes) {
+				// if (box.isInBox(Double.parseDouble(parts[7]),
+				// Double.parseDouble(parts[8]))) {
+				// String tempFlow = parts[3];
+				// if (inputParts[1].equals("0")) {
+				// tempFlow = inputParts[2];
+				// }
+				// outputKey.set(box + ":" + parts[1].substring(0, 7));
+				// outputVal.set("flow," + tempFlow);
+				// context.write(outputKey, outputVal);
+				// outputKey.set(box + ":" + parts[1].substring(0, 7));
+				// outputVal.set("speed," + parts[2]);
+				// context.write(outputKey, outputVal);
+				// outputKey.set(box + ":" + parts[1].substring(0, 7));
+				// outputVal.set("occupancy," + parts[4]);
+				// context.write(outputKey, outputVal);
+				//
+				// }
+				// }
+				// } else {
+				String[] parts = input.split(",");
+				for (Box box : boundingBoxes) {
+					if (box.isInBox(Double.parseDouble(parts[3]),
+							Double.parseDouble(parts[4]))) {
+						outputKey.set(box + ":" + parts[1].substring(0, 7));
+						outputVal.set(parts[2] + ",1");
+						context.write(outputKey, outputVal);
 					}
 				}
+				// }
 			}
 		} catch (Exception e) {
 			System.out.println(value.toString());
