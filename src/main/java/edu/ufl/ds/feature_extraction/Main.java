@@ -26,8 +26,10 @@ public class Main extends Configured implements Tool {
 			// "/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/cleaned_data",
 			// "/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/temp/output",
 
-			Job job = createJob(args[0]+"/*", args[1], MonthMapper.class,
-					MonthReducer.class);
+			Job job = createJob(
+					"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/resulttemp",
+					"/Users/vipulmittal/Documents/fall-2015/ds/NIST/NIST_traffic_data_analysis/resources/final_result",
+					MonthMapper.class, MonthReducer.class);
 
 			job.waitForCompletion(true);
 		} catch (InterruptedException | ClassNotFoundException | IOException e) {
